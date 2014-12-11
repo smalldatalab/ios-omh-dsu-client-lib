@@ -10,6 +10,12 @@
 
 @protocol OMHSignInDelegate;
 
+@interface OMHTest : NSObject
+
++ (void)test;
+
+@end
+
 @interface OMHClient : NSObject
 
 + (instancetype)sharedClient;

@@ -14,6 +14,17 @@
 
 NSString * const kDSUBaseURL = @"https://lifestreams.smalldata.io/dsu/";
 
+
+
+@implementation OMHTest
+
++ (void)test
+{
+    NSLog(@"TEST!!");
+}
+
+@end
+
 @interface OMHClient () <GPPSignInDelegate>
 
 @property (nonatomic, strong) GPPSignIn *gppSignIn;
