@@ -8,6 +8,7 @@
 
 #import "OMHClientLibrary.h"
 #import "AFHTTPSessionManager.h"
+#import "AFNetworkActivityIndicatorManager.h"
 
 #import <GooglePlus/GooglePlus.h>
 #import <GoogleOpenSource/GoogleOpenSource.h>
@@ -80,7 +81,7 @@ NSString * const kDSUBaseURL = @"https://lifestreams.smalldata.io/dsu/";
         _dsuAccessToken = [decoder decodeObjectForKey:@"client.dsuAccessToken"];
         _dsuRefreshToken = [decoder decodeObjectForKey:@"client.dsuRefreshToken"];
         _pendingDataPoints = [decoder decodeObjectForKey:@"client.pendingDataPoints"];
-        if (_pendingDataPoints == nil) _pendingDataPoints = [NSMutableArray array]; // TODO: remove
+//        if (_pendingDataPoints == nil) _pendingDataPoints = [NSMutableArray array]; // TODO: remove
         [_pendingDataPoints removeAllObjects];
         _accessTokenDate = [decoder decodeObjectForKey:@"client.accessTokenDate"];
         _accessTokenValidDuration = [decoder decodeDoubleForKey:@"client.accessTokenValidDuration"];
@@ -150,8 +151,32 @@ NSString * const kDSUBaseURL = @"https://lifestreams.smalldata.io/dsu/";
 {
     if (_httpSessionManager == nil) {
         _httpSessionManager = [[AFHTTPSessionManager alloc] initWithBaseURL:[NSURL URLWithString:kDSUBaseURL]];
+        
+        // setup reachability
+        __weak OMHClient *weakSelf = self;
+        [_httpSessionManager.reachabilityManager setReachabilityStatusChangeBlock:^(AFNetworkReachabilityStatus status) {
+            [weakSelf reachabilityStatusDidChange:status];
+        }];
+        [_httpSessionManager.reachabilityManager startMonitoring];
+        
+        // enable network activity indicator
+        [[AFNetworkActivityIndicatorManager sharedManager] setEnabled:YES];
     }
     return _httpSessionManager;
+}
+
+- (void)reachabilityStatusDidChange:(AFNetworkReachabilityStatus)status
+{
+    // when network becomes reachable, re-authenticate user
+    // and upload any pending survey responses
+    if (status > AFNetworkReachabilityStatusNotReachable) {
+        if ([self accessTokenHasExpired]) {
+            [self refreshAuthentication];
+        }
+        else {
+            [self uploadPendingDataPoints];
+        }
+    }
 }
 
 - (void)setDSUSignInHeader
@@ -183,6 +208,12 @@ NSString * const kDSUBaseURL = @"https://lifestreams.smalldata.io/dsu/";
     [self saveClientState];
 }
 
+- (BOOL)accessTokenHasExpired
+{
+    return ([[self.accessTokenDate dateByAddingTimeInterval:self.accessTokenValidDuration]
+             compare:[NSDate date]] == NSOrderedAscending);
+}
+
 - (void)refreshAuthentication
 {
     [self setDSUSignInHeader];
@@ -205,8 +236,13 @@ NSString * const kDSUBaseURL = @"https://lifestreams.smalldata.io/dsu/";
 - (void)submitDataPoint:(NSDictionary *)dataPoint
 {
     [self.pendingDataPoints addObject:dataPoint];
-    // TODO: check expiry date and don't refresh unless necessary
-    [self refreshAuthentication];
+    
+    if ([self accessTokenHasExpired]) {
+        [self refreshAuthentication];
+    }
+    else {
+        [self submitDataPoint:dataPoint];
+    }
 }
 
 - (void)uploadPendingDataPoints
@@ -222,18 +258,8 @@ NSString * const kDSUBaseURL = @"https://lifestreams.smalldata.io/dsu/";
 {
     NSLog(@"uploading data point: %@", dataPoint);
     
-    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:dataPoint
-                                                       options:0
-                                                         error:nil];
-    NSDictionary *dataHeaders = @{@"Content-Disposition" :@"form-data; name=\"data\"",
-                                  @"Content-Type" : @"application/json"};
-    
     NSString *request = @"dataPoints";
     
-    //    [self.httpSessionManager POST:request parameters:nil constructingBodyWithBlock:^(id<AFMultipartFormData> formData) {
-    //        [formData appendPartWithHeaders:dataHeaders body:jsonData];
-    //
-    //    }
     [self.httpSessionManager POST:request parameters:dataPoint
                           success:^(NSURLSessionDataTask *task, id responseObject) {
                               NSLog(@"upload data point succeeded: %@", responseObject);

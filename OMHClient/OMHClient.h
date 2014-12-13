@@ -18,4 +18,4 @@ FOUNDATION_EXPORT const unsigned char OMHClientVersionString[];
 
 
 #import <OMHClient/OMHClientLibrary.h>
-#import <OMHClient/NSMutableDictionary+OMHDataPoint.h>
+#import <OMHClient/OMHDataPoint.h>
