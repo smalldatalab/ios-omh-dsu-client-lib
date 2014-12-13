@@ -55,6 +55,8 @@
 		1EB7666E1A39C0C5007921A4 /* GoogleOpenSource.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1EC913A61A3987CF00D236A7 /* GoogleOpenSource.framework */; };
 		1EB7666F1A39C0C5007921A4 /* GooglePlus.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1EC913A81A3987CF00D236A7 /* GooglePlus.framework */; };
 		1EB766701A39C0D5007921A4 /* GooglePlus.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 1EC913A71A3987CF00D236A7 /* GooglePlus.bundle */; };
+		1EB766CA1A3BEFA2007921A4 /* NSMutableDictionary+OMHDataPoint.h in Headers */ = {isa = PBXBuildFile; fileRef = 1EB766C81A3BEFA2007921A4 /* NSMutableDictionary+OMHDataPoint.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		1EB766CB1A3BEFA2007921A4 /* NSMutableDictionary+OMHDataPoint.m in Sources */ = {isa = PBXBuildFile; fileRef = 1EB766C91A3BEFA2007921A4 /* NSMutableDictionary+OMHDataPoint.m */; };
 		1EC913391A39836000D236A7 /* OMHClient.h in Headers */ = {isa = PBXBuildFile; fileRef = 1EC913381A39836000D236A7 /* OMHClient.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		1EC913741A39875F00D236A7 /* OMHClientLibrary.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1EC913731A39875F00D236A7 /* OMHClientLibrary.h */; };
 		1EC9139C1A3987B000D236A7 /* AFHTTPRequestOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1EC9138A1A3987B000D236A7 /* AFHTTPRequestOperation.m */; };
@@ -105,6 +107,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		1EB766C81A3BEFA2007921A4 /* NSMutableDictionary+OMHDataPoint.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "NSMutableDictionary+OMHDataPoint.h"; path = "OMHClientLibrary/NSMutableDictionary+OMHDataPoint.h"; sourceTree = SOURCE_ROOT; };
+		1EB766C91A3BEFA2007921A4 /* NSMutableDictionary+OMHDataPoint.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSMutableDictionary+OMHDataPoint.m"; path = "OMHClientLibrary/NSMutableDictionary+OMHDataPoint.m"; sourceTree = SOURCE_ROOT; };
 		1EC913331A39836000D236A7 /* OMHClient.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = OMHClient.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		1EC913371A39836000D236A7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		1EC913381A39836000D236A7 /* OMHClient.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OMHClient.h; sourceTree = "<group>"; };
@@ -211,6 +215,8 @@
 				1EC913381A39836000D236A7 /* OMHClient.h */,
 				1EC913731A39875F00D236A7 /* OMHClientLibrary.h */,
 				1EC913751A39875F00D236A7 /* OMHClientLibrary.m */,
+				1EB766C81A3BEFA2007921A4 /* NSMutableDictionary+OMHDataPoint.h */,
+				1EB766C91A3BEFA2007921A4 /* NSMutableDictionary+OMHDataPoint.m */,
 				1EC913881A3987B000D236A7 /* AFNetworking */,
 				1EC913A51A3987CF00D236A7 /* GoogleSDK */,
 				1EC913BF1A3988A600D236A7 /* Frameworks */,
@@ -299,6 +305,7 @@
 			files = (
 				1EB7666C1A39C05F007921A4 /* AFURLSessionManager.h in Headers */,
 				1EB766621A39C05F007921A4 /* AFNetworkReachabilityManager.h in Headers */,
+				1EB766CA1A3BEFA2007921A4 /* NSMutableDictionary+OMHDataPoint.h in Headers */,
 				1EC913C01A39893B00D236A7 /* OMHClientLibrary.h in Headers */,
 				1EB766681A39C05F007921A4 /* AFURLRequestSerialization.h in Headers */,
 				1EB7665D1A39C05F007921A4 /* AFHTTPRequestOperationManager.h in Headers */,
@@ -423,6 +430,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1EB766CB1A3BEFA2007921A4 /* NSMutableDictionary+OMHDataPoint.m in Sources */,
 				1EB766671A39C05F007921A4 /* AFURLConnectionOperation.m in Sources */,
 				1EB7666B1A39C05F007921A4 /* AFURLResponseSerialization.m in Sources */,
 				1EB7665C1A39C05F007921A4 /* AFHTTPRequestOperation.m in Sources */,
@@ -555,6 +563,7 @@
 					"$(ARCHS_STANDARD)",
 					armv7s,
 				);
+				CODE_SIGN_IDENTITY = "iPhone Developer: Charles Forkish (A2HDKNQ6ZN)";
 				COPY_PHASE_STRIP = NO;
 				DEFINES_MODULE = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
@@ -585,6 +594,7 @@
 					"$(ARCHS_STANDARD)",
 					armv7s,
 				);
+				CODE_SIGN_IDENTITY = "iPhone Developer: Charles Forkish (A2HDKNQ6ZN)";
 				COPY_PHASE_STRIP = NO;
 				DEFINES_MODULE = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;

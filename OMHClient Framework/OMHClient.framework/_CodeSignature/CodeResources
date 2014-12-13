@@ -1431,13 +1431,21 @@
 			<key>optional</key>
 			<true/>
 		</dict>
+		<key>Headers/NSMutableDictionary+OMHDataPoint.h</key>
+		<data>
+		L9P3u1QcQhCPjZjwbdy4CiIG5gw=
+		</data>
 		<key>Headers/OMHClient.h</key>
 		<data>
-		Kdp5ctfa87jSsXCudg8/+/B6r14=
+		7TFjW6MdZMn4q4l+RlCtfPb6HcI=
 		</data>
 		<key>Headers/OMHClientLibrary.h</key>
 		<data>
-		APXkSJosRaVxblU+N8YMLxtYNtA=
+		NtMDlXeQRdCQrlgNTxgPjvwcc7o=
+		</data>
+		<key>Headers/OMHDataPoint.h</key>
+		<data>
+		lUkBGONLB6r4cN/rE1DWD7H4mbE=
 		</data>
 		<key>Info.plist</key>
 		<data>
@@ -2877,13 +2885,21 @@
 			<key>optional</key>
 			<true/>
 		</dict>
+		<key>Headers/NSMutableDictionary+OMHDataPoint.h</key>
+		<data>
+		L9P3u1QcQhCPjZjwbdy4CiIG5gw=
+		</data>
 		<key>Headers/OMHClient.h</key>
 		<data>
-		Kdp5ctfa87jSsXCudg8/+/B6r14=
+		7TFjW6MdZMn4q4l+RlCtfPb6HcI=
 		</data>
 		<key>Headers/OMHClientLibrary.h</key>
 		<data>
-		APXkSJosRaVxblU+N8YMLxtYNtA=
+		NtMDlXeQRdCQrlgNTxgPjvwcc7o=
+		</data>
+		<key>Headers/OMHDataPoint.h</key>
+		<data>
+		lUkBGONLB6r4cN/rE1DWD7H4mbE=
 		</data>
 		<key>Modules/module.modulemap</key>
 		<data>
