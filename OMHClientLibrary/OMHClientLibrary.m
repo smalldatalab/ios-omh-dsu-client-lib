@@ -210,8 +210,9 @@ NSString * const kDSUBaseURL = @"https://lifestreams.smalldata.io/dsu/";
 
 - (BOOL)accessTokenHasExpired
 {
-    return ([[self.accessTokenDate dateByAddingTimeInterval:self.accessTokenValidDuration]
-             compare:[NSDate date]] == NSOrderedAscending);
+    NSDate *validDate = [self.accessTokenDate dateByAddingTimeInterval:self.accessTokenValidDuration];
+    NSComparisonResult comp = [validDate compare:[NSDate date]];
+    return (comp == NSOrderedAscending);
 }
 
 - (void)refreshAuthentication
@@ -226,6 +227,7 @@ NSString * const kDSUBaseURL = @"https://lifestreams.smalldata.io/dsu/";
         NSLog(@"refresh authentication success: %@", responseObject);
         
         [self storeAuthenticationResponse:(NSDictionary *)responseObject];
+        [self setDSUUploadHeader];
         [self uploadPendingDataPoints];
         
     } failure:^(NSURLSessionDataTask *task, NSError *error) {
@@ -241,14 +243,14 @@ NSString * const kDSUBaseURL = @"https://lifestreams.smalldata.io/dsu/";
         [self refreshAuthentication];
     }
     else {
-        [self submitDataPoint:dataPoint];
+        [self uploadDataPoint:dataPoint];
     }
 }
 
 - (void)uploadPendingDataPoints
 {
     NSLog(@"uploading pending data points: %d", (int)self.pendingDataPoints.count);
-    [self setDSUUploadHeader];
+    
     for (NSDictionary *dataPoint in self.pendingDataPoints) {
         [self uploadDataPoint:dataPoint];
     }
@@ -326,10 +328,12 @@ NSString * const kDSUBaseURL = @"https://lifestreams.smalldata.io/dsu/";
     [self.httpSessionManager GET:request parameters:parameters success:^(NSURLSessionDataTask *task, id responseObject) {
         NSLog(@"DSU login success, response object: %@", responseObject);
         [self storeAuthenticationResponse:(NSDictionary *)responseObject];
+        [self setDSUUploadHeader];
         
         if (self.signInDelegate != nil) {
             [self.signInDelegate OMHClientSignInFinishedWithError:nil];
         }
+        
     } failure:^(NSURLSessionDataTask *task, NSError *error) {
         NSLog(@"DSU login failure, error: %@", error);
         

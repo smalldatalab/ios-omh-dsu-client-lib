@@ -1,5 +1,5 @@
 //
-//  NSMutableDictionary+OMHDataPoint.h
+//  OMHDataPoint.h
 //  OMHClient
 //
 //  Created by Charles Forkish on 12/13/14.
