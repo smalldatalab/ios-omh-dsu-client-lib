@@ -1,14 +1,14 @@
 //
 //  ViewController.m
-//  OHMClientDevApp
+//  OMHClientDevApp
 //
-//  Created by Charles Forkish on 12/13/14.
+//  Created by Charles Forkish on 12/15/14.
 //  Copyright (c) 2014 Open mHealth. All rights reserved.
 //
 
 #import "ViewController.h"
 
-#import <OMHClient/OMHClient.h>
+#import "OMHClient.h"
 
 @interface ViewController ()
 
@@ -19,9 +19,6 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
-    
-    OMHDataPoint *dataPoint = [OMHDataPoint templateDataPoint];
-    NSLog(@"Data Point: %@", dataPoint);
 }
 
 - (void)didReceiveMemoryWarning {

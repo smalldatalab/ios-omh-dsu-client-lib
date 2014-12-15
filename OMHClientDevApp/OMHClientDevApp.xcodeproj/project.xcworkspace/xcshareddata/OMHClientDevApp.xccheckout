@@ -5,9 +5,9 @@
 	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
 	<false/>
 	<key>IDESourceControlProjectIdentifier</key>
-	<string>B4D1EBEA-E82D-47C4-90F9-588F6AD32C4D</string>
+	<string>20C05501-6734-41BF-95D7-0B9B28D6CB74</string>
 	<key>IDESourceControlProjectName</key>
-	<string>OHMClientDevApp</string>
+	<string>OMHClientDevApp</string>
 	<key>IDESourceControlProjectOriginsDictionary</key>
 	<dict>
 		<key>091E09210FD78AFBF90DE870FC06BC93C5CC870D</key>
@@ -16,7 +16,7 @@
 		<string>https://github.com/cforkish/OMHClient.git</string>
 	</dict>
 	<key>IDESourceControlProjectPath</key>
-	<string>OHMClientDevApp/OHMClientDevApp.xcodeproj</string>
+	<string>OMHClientDevApp/OMHClientDevApp.xcodeproj</string>
 	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
 	<dict>
 		<key>091E09210FD78AFBF90DE870FC06BC93C5CC870D</key>

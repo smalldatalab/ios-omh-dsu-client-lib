@@ -6,7 +6,7 @@
 //  Copyright (c) 2014 Open mHealth. All rights reserved.
 //
 
-#import "OMHClientLibrary.h"
+#import "OMHClientDSUConnector.h"
 #import "AFHTTPSessionManager.h"
 #import "AFNetworkActivityIndicatorManager.h"
 

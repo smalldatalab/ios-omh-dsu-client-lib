@@ -1,19 +1,19 @@
 //
-//  OHMClientDevAppTests.m
-//  OHMClientDevAppTests
+//  OMHClientDevAppTests.m
+//  OMHClientDevAppTests
 //
-//  Created by Charles Forkish on 12/13/14.
+//  Created by Charles Forkish on 12/15/14.
 //  Copyright (c) 2014 Open mHealth. All rights reserved.
 //
 
 #import <UIKit/UIKit.h>
 #import <XCTest/XCTest.h>
 
-@interface OHMClientDevAppTests : XCTestCase
+@interface OMHClientDevAppTests : XCTestCase
 
 @end
 
-@implementation OHMClientDevAppTests
+@implementation OMHClientDevAppTests
 
 - (void)setUp {
     [super setUp];

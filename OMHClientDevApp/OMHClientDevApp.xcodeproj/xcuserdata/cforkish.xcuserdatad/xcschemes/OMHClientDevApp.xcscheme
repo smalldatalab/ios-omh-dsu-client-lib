@@ -14,10 +14,10 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "1EC913701A39875F00D236A7"
-               BuildableName = "libOMHClientLibrary.a"
-               BlueprintName = "OMHClientLibrary"
-               ReferencedContainer = "container:OMHClient.xcodeproj">
+               BlueprintIdentifier = "1ED01E4F1A3E8954008DFD77"
+               BuildableName = "OMHClientDevApp.app"
+               BlueprintName = "OMHClientDevApp"
+               ReferencedContainer = "container:OMHClientDevApp.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
          <BuildActionEntry
@@ -28,10 +28,10 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "1EC9137A1A39876000D236A7"
-               BuildableName = "OMHClientLibraryTests.xctest"
-               BlueprintName = "OMHClientLibraryTests"
-               ReferencedContainer = "container:OMHClient.xcodeproj">
+               BlueprintIdentifier = "1ED01E681A3E8954008DFD77"
+               BuildableName = "OMHClientDevAppTests.xctest"
+               BlueprintName = "OMHClientDevAppTests"
+               ReferencedContainer = "container:OMHClientDevApp.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -46,20 +46,20 @@
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "1EC9137A1A39876000D236A7"
-               BuildableName = "OMHClientLibraryTests.xctest"
-               BlueprintName = "OMHClientLibraryTests"
-               ReferencedContainer = "container:OMHClient.xcodeproj">
+               BlueprintIdentifier = "1ED01E681A3E8954008DFD77"
+               BuildableName = "OMHClientDevAppTests.xctest"
+               BlueprintName = "OMHClientDevAppTests"
+               ReferencedContainer = "container:OMHClientDevApp.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "1EC913701A39875F00D236A7"
-            BuildableName = "libOMHClientLibrary.a"
-            BlueprintName = "OMHClientLibrary"
-            ReferencedContainer = "container:OMHClient.xcodeproj">
+            BlueprintIdentifier = "1ED01E4F1A3E8954008DFD77"
+            BuildableName = "OMHClientDevApp.app"
+            BlueprintName = "OMHClientDevApp"
+            ReferencedContainer = "container:OMHClientDevApp.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
    </TestAction>
@@ -72,15 +72,15 @@
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
       allowLocationSimulation = "YES">
-      <MacroExpansion>
+      <BuildableProductRunnable>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "1EC913701A39875F00D236A7"
-            BuildableName = "libOMHClientLibrary.a"
-            BlueprintName = "OMHClientLibrary"
-            ReferencedContainer = "container:OMHClient.xcodeproj">
+            BlueprintIdentifier = "1ED01E4F1A3E8954008DFD77"
+            BuildableName = "OMHClientDevApp.app"
+            BlueprintName = "OMHClientDevApp"
+            ReferencedContainer = "container:OMHClientDevApp.xcodeproj">
          </BuildableReference>
-      </MacroExpansion>
+      </BuildableProductRunnable>
       <AdditionalOptions>
       </AdditionalOptions>
    </LaunchAction>
@@ -90,15 +90,15 @@
       useCustomWorkingDirectory = "NO"
       buildConfiguration = "Release"
       debugDocumentVersioning = "YES">
-      <MacroExpansion>
+      <BuildableProductRunnable>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "1EC913701A39875F00D236A7"
-            BuildableName = "libOMHClientLibrary.a"
-            BlueprintName = "OMHClientLibrary"
-            ReferencedContainer = "container:OMHClient.xcodeproj">
+            BlueprintIdentifier = "1ED01E4F1A3E8954008DFD77"
+            BuildableName = "OMHClientDevApp.app"
+            BlueprintName = "OMHClientDevApp"
+            ReferencedContainer = "container:OMHClientDevApp.xcodeproj">
          </BuildableReference>
-      </MacroExpansion>
+      </BuildableProductRunnable>
    </ProfileAction>
    <AnalyzeAction
       buildConfiguration = "Debug">

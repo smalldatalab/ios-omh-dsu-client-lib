@@ -4,7 +4,7 @@
 <dict>
 	<key>SchemeUserState</key>
 	<dict>
-		<key>OHMClientDevApp.xcscheme</key>
+		<key>OMHClientDevApp.xcscheme</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>0</integer>
@@ -12,12 +12,12 @@
 	</dict>
 	<key>SuppressBuildableAutocreation</key>
 	<dict>
-		<key>1EB766891A3BDEEB007921A4</key>
+		<key>1ED01E4F1A3E8954008DFD77</key>
 		<dict>
 			<key>primary</key>
 			<true/>
 		</dict>
-		<key>1EB766A21A3BDEEB007921A4</key>
+		<key>1ED01E681A3E8954008DFD77</key>
 		<dict>
 			<key>primary</key>
 			<true/>
