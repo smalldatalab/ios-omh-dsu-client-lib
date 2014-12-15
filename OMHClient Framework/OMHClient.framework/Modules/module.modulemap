@@ -1,6 +1,0 @@
-framework module OMHClient {
-  umbrella header "OMHClient.h"
-
-  export *
-  module * { export * }
-}
