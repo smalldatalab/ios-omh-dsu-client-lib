@@ -22,7 +22,7 @@ typedef NSMutableDictionary OMHAcquisitionProvenance;
 + (instancetype)templateDataPoint;
 
 @property (nonatomic, copy) OMHHeader *header;
-@property (nonatomic, copy) NSDictionary *body;
+@property (nonatomic, copy) NSMutableDictionary *body;
 
 
 /**

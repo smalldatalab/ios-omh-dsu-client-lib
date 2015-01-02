@@ -30,6 +30,7 @@ NSString * const kDSUBaseURL = @"https://lifestreams.smalldata.io/dsu/";
 @property (nonatomic, strong) NSMutableArray *pendingDataPoints;
 
 @property (nonatomic, assign) BOOL isAuthenticated;
+@property (atomic, assign) BOOL isAuthenticating;
 
 @end
 
@@ -113,7 +114,7 @@ NSString * const kDSUBaseURL = @"https://lifestreams.smalldata.io/dsu/";
 
 - (void)saveClientState
 {
-    NSLog(@"saving client state, pending: %d", (int)self.pendingDataPoints.count);
+//    NSLog(@"saving client state, pending: %d", (int)self.pendingDataPoints.count);
     NSData *encodedClient = [NSKeyedArchiver archivedDataWithRootObject:self];
     NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
     [userDefaults setObject:encodedClient forKey:@"OMHClient"];
@@ -229,6 +230,10 @@ NSString * const kDSUBaseURL = @"https://lifestreams.smalldata.io/dsu/";
 
 - (void)refreshAuthentication
 {
+    NSLog(@"refresh authentication, isAuthenticating: %d, refreshToken: %d", self.isAuthenticating, (self.dsuRefreshToken != nil));
+    if (self.isAuthenticating || self.dsuRefreshToken == nil) return;
+    
+    self.isAuthenticating = YES;
     [self setDSUSignInHeader];
     
     NSString *request = @"oauth/token";
@@ -238,6 +243,7 @@ NSString * const kDSUBaseURL = @"https://lifestreams.smalldata.io/dsu/";
     [self.httpSessionManager POST:request parameters:parameters success:^(NSURLSessionDataTask *task, id responseObject) {
         NSLog(@"refresh authentication success: %@", responseObject);
         self.isAuthenticated = YES;
+        self.isAuthenticating = NO;
         [self storeAuthenticationResponse:(NSDictionary *)responseObject];
         [self setDSUUploadHeader];
         [self uploadPendingDataPoints];
@@ -245,6 +251,7 @@ NSString * const kDSUBaseURL = @"https://lifestreams.smalldata.io/dsu/";
     } failure:^(NSURLSessionDataTask *task, NSError *error) {
         NSLog(@"refresh authentiation failed: %@", error);
         self.isAuthenticated = NO;
+        self.isAuthenticating = NO;
     }];
 }
 
@@ -252,6 +259,8 @@ NSString * const kDSUBaseURL = @"https://lifestreams.smalldata.io/dsu/";
 {
     [self.pendingDataPoints addObject:dataPoint];
     [self saveClientState];
+    
+    if (self.isAuthenticating) return;
     
     if ([self accessTokenHasExpired] || !self.isAuthenticated) {
         [self refreshAuthentication];
@@ -263,7 +272,7 @@ NSString * const kDSUBaseURL = @"https://lifestreams.smalldata.io/dsu/";
 
 - (void)uploadPendingDataPoints
 {
-    NSLog(@"uploading pending data points: %d", (int)self.pendingDataPoints.count);
+//    NSLog(@"uploading pending data points: %d, isAuthenticating: %d", (int)self.pendingDataPoints.count, self.isAuthenticating);
     
     for (NSDictionary *dataPoint in self.pendingDataPoints) {
         [self uploadDataPoint:dataPoint];
@@ -272,7 +281,7 @@ NSString * const kDSUBaseURL = @"https://lifestreams.smalldata.io/dsu/";
 
 - (void)uploadDataPoint:(NSDictionary *)dataPoint
 {
-    NSLog(@"uploading data point: %@", dataPoint[@"header"][@"id"]);
+//    NSLog(@"uploading data point: %@, isAuthenticating: %d", dataPoint[@"header"][@"id"], self.isAuthenticating);
     
     NSString *request = @"dataPoints";
     
@@ -280,7 +289,7 @@ NSString * const kDSUBaseURL = @"https://lifestreams.smalldata.io/dsu/";
     [self.httpSessionManager POST:request parameters:dataPoint
                           success:^(NSURLSessionDataTask *task, id responseObject) {
                               NSLog(@"upload data point succeeded: %@", blockDataPoint[@"header"][@"id"]);
-                              NSLog(@"array contains data point: %d", [self.pendingDataPoints containsObject:blockDataPoint]);
+//                              NSLog(@"array contains data point: %d", [self.pendingDataPoints containsObject:blockDataPoint]);
                               [self.pendingDataPoints removeObject:blockDataPoint];
                               [self saveClientState];
                           } failure:^(NSURLSessionDataTask *task, NSError *error) {
@@ -349,11 +358,13 @@ NSString * const kDSUBaseURL = @"https://lifestreams.smalldata.io/dsu/";
     NSString *code = [NSString stringWithFormat:@"fromApp_%@", serverCode];
     NSDictionary *parameters = @{@"code": code, @"client_id" : self.appDSUClientID};
     
+    self.isAuthenticating = YES;
     [self.httpSessionManager GET:request parameters:parameters success:^(NSURLSessionDataTask *task, id responseObject) {
         NSLog(@"DSU login success, response object: %@", responseObject);
         [self storeAuthenticationResponse:(NSDictionary *)responseObject];
         [self setDSUUploadHeader];
         self.isAuthenticated = YES;
+        self.isAuthenticating = NO;
         
         if (self.signInDelegate != nil) {
             [self.signInDelegate OMHClientSignInFinishedWithError:nil];
@@ -362,6 +373,7 @@ NSString * const kDSUBaseURL = @"https://lifestreams.smalldata.io/dsu/";
     } failure:^(NSURLSessionDataTask *task, NSError *error) {
         NSLog(@"DSU login failure, error: %@", error);
         
+        self.isAuthenticating = NO;
         if (self.signInDelegate != nil) {
             [self.signInDelegate OMHClientSignInFinishedWithError:error];
         }
