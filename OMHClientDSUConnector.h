@@ -38,8 +38,5 @@ sourceApplication:(NSString *)sourceApplication
 
 
 @protocol OMHSignInDelegate
-@optional
-
 - (void)OMHClientSignInFinishedWithError:(NSError *)error;
-
 @end

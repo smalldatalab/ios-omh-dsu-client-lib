@@ -303,7 +303,9 @@ NSString * const kDSUBaseURL = @"https://lifestreams.smalldata.io/dsu/";
 {
     NSLog(@"Client received google error %@ and auth object %@",error, auth);
     if (error) {
-        
+        if (self.signInDelegate) {
+            [self.signInDelegate OMHClientSignInFinishedWithError:error];
+        }
     }
     else {
         NSString *serverCode = [GPPSignIn sharedInstance].homeServerAuthorizationCode;
