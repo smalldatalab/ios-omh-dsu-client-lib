@@ -31,10 +31,10 @@ sourceApplication:(NSString *)sourceApplication
        annotation:(id)annotation;
 
 - (void)getRequest:(NSString *)request withParameters:(NSDictionary *)parameters
-   completionBlock:(void (^)(id responseObject, NSError *error))block;
+   completionBlock:(void (^)(id responseObject, NSError *error, NSInteger statusCode))block;
 
 - (void)postRequest:(NSString *)request withParameters:(NSDictionary *)parameters
-    completionBlock:(void (^)(id responseObject, NSError *error))block;
+    completionBlock:(void (^)(id responseObject, NSError *error, NSInteger statusCode))block;
 
 - (void)signOut;
 
