@@ -30,6 +30,12 @@
 sourceApplication:(NSString *)sourceApplication
        annotation:(id)annotation;
 
+- (void)getRequest:(NSString *)request withParameters:(NSDictionary *)parameters
+   completionBlock:(void (^)(id responseObject, NSError *error))block;
+
+- (void)postRequest:(NSString *)request withParameters:(NSDictionary *)parameters
+    completionBlock:(void (^)(id responseObject, NSError *error))block;
+
 - (void)signOut;
 
 - (void)submitDataPoint:(NSDictionary *)dataPoint;

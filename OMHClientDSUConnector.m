@@ -165,6 +165,31 @@ NSString * const kDSUBaseURL = @"https://lifestreams.smalldata.io/dsu/";
     return _httpSessionManager;
 }
 
+- (void)getRequest:(NSString *)request withParameters:(NSDictionary *)parameters
+   completionBlock:(void (^)(id responseObject, NSError *error))block
+{
+    [self.httpSessionManager GET:request parameters:parameters success:^(NSURLSessionDataTask *task, id responseObject) {
+        // request succeeded
+        block(responseObject, nil);
+        
+    } failure:^(NSURLSessionDataTask *task, NSError *error) {
+        // request failed
+        block(nil, error);
+    }];
+}
+
+- (void)postRequest:(NSString *)request withParameters:(NSDictionary *)parameters
+    completionBlock:(void (^)(id responseObject, NSError *error))block
+{
+    [self.httpSessionManager POST:request parameters:parameters success:^(NSURLSessionDataTask *task, id responseObject) {
+        // request succeeded
+        block(responseObject, nil);
+    } failure:^(NSURLSessionDataTask *task, NSError *error) {
+        // request failed
+        block(nil, error);
+    }];
+}
+
 - (void)reachabilityStatusDidChange:(AFNetworkReachabilityStatus)status
 {
     // when network becomes reachable, re-authenticate user
@@ -223,15 +248,17 @@ NSString * const kDSUBaseURL = @"https://lifestreams.smalldata.io/dsu/";
     NSDictionary *parameters = @{@"refresh_token" : self.dsuRefreshToken,
                                  @"grant_type" : @"refresh_token"};
     
-    [self.httpSessionManager POST:request parameters:parameters success:^(NSURLSessionDataTask *task, id responseObject) {
-        NSLog(@"refresh authentication success: %@", responseObject);
-        
-        [self storeAuthenticationResponse:(NSDictionary *)responseObject];
-        [self setDSUUploadHeader];
-        [self uploadPendingDataPoints];
-        
-    } failure:^(NSURLSessionDataTask *task, NSError *error) {
-        NSLog(@"refresh authentiation failed: %@", error);
+    [self postRequest:request withParameters:parameters completionBlock:^(id responseObject, NSError *error) {
+        if (error == nil) {
+            NSLog(@"refresh authentication success: %@", responseObject);
+            
+            [self storeAuthenticationResponse:(NSDictionary *)responseObject];
+            [self setDSUUploadHeader];
+            [self uploadPendingDataPoints];
+        }
+        else {
+            NSLog(@"refresh authentiation failed: %@", error);
+        }
     }];
 }
 
@@ -262,14 +289,16 @@ NSString * const kDSUBaseURL = @"https://lifestreams.smalldata.io/dsu/";
     
     NSString *request = @"dataPoints";
     
-    [self.httpSessionManager POST:request parameters:dataPoint
-                          success:^(NSURLSessionDataTask *task, id responseObject) {
-                              NSLog(@"upload data point succeeded: %@", responseObject);
-                              NSLog(@"array contains data point: %d", [self.pendingDataPoints containsObject:dataPoint]);
-                              [self.pendingDataPoints removeObject:dataPoint];
-                          } failure:^(NSURLSessionDataTask *task, NSError *error) {
-                              NSLog(@"upload data point failed: %@", error);
-                          }];
+    [self postRequest:request withParameters:dataPoint completionBlock:^(id responseObject, NSError *error) {
+        if (error == nil) {
+            NSLog(@"upload data point succeeded: %@", responseObject);
+            NSLog(@"array contains data point: %d", [self.pendingDataPoints containsObject:dataPoint]);
+            [self.pendingDataPoints removeObject:dataPoint];
+        }
+        else {
+            NSLog(@"upload data point failed: %@", error);
+        }
+    }];
 }
 
 
@@ -327,20 +356,22 @@ NSString * const kDSUBaseURL = @"https://lifestreams.smalldata.io/dsu/";
     NSString *code = [NSString stringWithFormat:@"fromApp_%@", serverCode];
     NSDictionary *parameters = @{@"code": code, @"client_id" : self.appDSUClientID};
     
-    [self.httpSessionManager GET:request parameters:parameters success:^(NSURLSessionDataTask *task, id responseObject) {
-        NSLog(@"DSU login success, response object: %@", responseObject);
-        [self storeAuthenticationResponse:(NSDictionary *)responseObject];
-        [self setDSUUploadHeader];
-        
-        if (self.signInDelegate != nil) {
-            [self.signInDelegate OMHClientSignInFinishedWithError:nil];
+    [self getRequest:request withParameters:parameters completionBlock:^(id responseObject, NSError *error) {
+        if (error == nil) {
+            NSLog(@"DSU login success, response object: %@", responseObject);
+            [self storeAuthenticationResponse:(NSDictionary *)responseObject];
+            [self setDSUUploadHeader];
+            
+            if (self.signInDelegate != nil) {
+                [self.signInDelegate OMHClientSignInFinishedWithError:nil];
+            }
         }
-        
-    } failure:^(NSURLSessionDataTask *task, NSError *error) {
-        NSLog(@"DSU login failure, error: %@", error);
-        
-        if (self.signInDelegate != nil) {
-            [self.signInDelegate OMHClientSignInFinishedWithError:error];
+        else {
+            NSLog(@"DSU login failure, error: %@", error);
+            
+            if (self.signInDelegate != nil) {
+                [self.signInDelegate OMHClientSignInFinishedWithError:error];
+            }
         }
     }];
 }
