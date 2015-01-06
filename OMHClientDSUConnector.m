@@ -31,6 +31,7 @@ NSString * const kDSUBaseURL = @"https://lifestreams.smalldata.io/dsu/";
 
 @property (nonatomic, assign) BOOL isAuthenticated;
 @property (atomic, assign) BOOL isAuthenticating;
+@property (nonatomic, strong) NSMutableArray *authRefreshCompletionBlocks;
 
 @end
 
@@ -138,6 +139,22 @@ NSString * const kDSUBaseURL = @"https://lifestreams.smalldata.io/dsu/";
 
 #pragma mark - Property Accessors
 
+- (NSMutableArray *)pendingDataPoints
+{
+    if (_pendingDataPoints == nil) {
+        _pendingDataPoints = [NSMutableArray array];
+    }
+    return _pendingDataPoints;
+}
+
+- (NSMutableArray *)authRefreshCompletionBlocks
+{
+    if (_authRefreshCompletionBlocks == nil) {
+        _authRefreshCompletionBlocks = [NSMutableArray array];
+    }
+    return _authRefreshCompletionBlocks;
+}
+
 - (void)setAppGoogleClientID:(NSString *)appGoogleClientID
 {
     _appGoogleClientID = appGoogleClientID;
@@ -219,7 +236,7 @@ NSString * const kDSUBaseURL = @"https://lifestreams.smalldata.io/dsu/";
     // and upload any pending survey responses
     if (status > AFNetworkReachabilityStatusNotReachable) {
         if ([self accessTokenHasExpired] || !self.isAuthenticated) {
-            [self refreshAuthentication];
+            [self refreshAuthenticationWithCompletionBlock:nil];
         }
         else {
             [self uploadPendingDataPoints];
@@ -264,9 +281,14 @@ NSString * const kDSUBaseURL = @"https://lifestreams.smalldata.io/dsu/";
     return (comp == NSOrderedAscending);
 }
 
-- (void)refreshAuthentication
+- (void)refreshAuthenticationWithCompletionBlock:(void (^)(BOOL success))block
 {
     NSLog(@"refresh authentication, isAuthenticating: %d, refreshToken: %d", self.isAuthenticating, (self.dsuRefreshToken != nil));
+    
+    if (block) {
+        [self.authRefreshCompletionBlocks addObject:block];
+    }
+    
     if (self.isAuthenticating || self.dsuRefreshToken == nil) return;
     
     self.isAuthenticating = YES;
@@ -282,13 +304,19 @@ NSString * const kDSUBaseURL = @"https://lifestreams.smalldata.io/dsu/";
             
             [self storeAuthenticationResponse:(NSDictionary *)responseObject];
             [self setDSUUploadHeader];
-            [self uploadPendingDataPoints];
+            self.isAuthenticated = YES;
         }
         else {
             NSLog(@"refresh authentiation failed: %@", error);
             self.isAuthenticated = NO;
-            self.isAuthenticating = NO;
         }
+        
+        self.isAuthenticating = NO;
+        
+        for (void (^completionBlock)(BOOL) in self.authRefreshCompletionBlocks) {
+            completionBlock(error == nil);
+        }
+        [self.authRefreshCompletionBlocks removeAllObjects];
     }];
 }
 
@@ -300,7 +328,7 @@ NSString * const kDSUBaseURL = @"https://lifestreams.smalldata.io/dsu/";
     if (self.isAuthenticating) return;
     
     if ([self accessTokenHasExpired] || !self.isAuthenticated) {
-        [self refreshAuthentication];
+        [self refreshAuthenticationWithCompletionBlock:nil];
     }
     else {
         [self uploadDataPoint:dataPoint];
@@ -326,7 +354,6 @@ NSString * const kDSUBaseURL = @"https://lifestreams.smalldata.io/dsu/";
     [self postRequest:request withParameters:dataPoint completionBlock:^(id responseObject, NSError *error, NSInteger statusCode) {
         if (error == nil) {
             NSLog(@"upload data point succeeded: %@", blockDataPoint[@"header"][@"id"]);
-            NSLog(@"array contains data point: %d", [self.pendingDataPoints containsObject:dataPoint]);
             [self.pendingDataPoints removeObject:dataPoint];
             [self saveClientState];
         }
@@ -374,7 +401,7 @@ NSString * const kDSUBaseURL = @"https://lifestreams.smalldata.io/dsu/";
     NSLog(@"Client received google error %@ and auth object %@",error, auth);
     if (error) {
         if (self.signInDelegate) {
-            [self.signInDelegate OMHClientSignInFinishedWithError:error];
+            [self.signInDelegate OMHClient:self signInFinishedWithError:error];
         }
     }
     else {
@@ -407,7 +434,7 @@ NSString * const kDSUBaseURL = @"https://lifestreams.smalldata.io/dsu/";
             self.isAuthenticating = NO;
             
             if (self.signInDelegate != nil) {
-                [self.signInDelegate OMHClientSignInFinishedWithError:nil];
+                [self.signInDelegate OMHClient:self signInFinishedWithError:nil];
             }
         }
         else {
@@ -415,7 +442,7 @@ NSString * const kDSUBaseURL = @"https://lifestreams.smalldata.io/dsu/";
             self.isAuthenticating = NO;
             
             if (self.signInDelegate != nil) {
-                [self.signInDelegate OMHClientSignInFinishedWithError:error];
+                [self.signInDelegate OMHClient:self signInFinishedWithError:error];
             }
         }
     }];

@@ -36,6 +36,13 @@ sourceApplication:(NSString *)sourceApplication
 - (void)postRequest:(NSString *)request withParameters:(NSDictionary *)parameters
     completionBlock:(void (^)(id responseObject, NSError *error, NSInteger statusCode))block;
 
+//- (void)authenticatedGetRequest:(NSString *)request withParameters:(NSDictionary *)parameters
+//                completionBlock:(void (^)(id responseObject, NSError *error, NSInteger statusCode))block;
+//
+//- (void)authenticatedPostRequest:(NSString *)request withParameters:(NSDictionary *)parameters
+//                 completionBlock:(void (^)(id responseObject, NSError *error, NSInteger statusCode))block;
+
+- (void)refreshAuthenticationWithCompletionBlock:(void (^)(BOOL success))block;
 - (void)signOut;
 
 - (void)submitDataPoint:(NSDictionary *)dataPoint;
@@ -44,5 +51,5 @@ sourceApplication:(NSString *)sourceApplication
 
 
 @protocol OMHSignInDelegate
-- (void)OMHClientSignInFinishedWithError:(NSError *)error;
+- (void)OMHClient:(OMHClient *)client signInFinishedWithError:(NSError *)error;
 @end
