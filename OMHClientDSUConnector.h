@@ -23,6 +23,7 @@
 @property (nonatomic, strong) NSString *appDSUClientID;
 @property (nonatomic, strong) NSString *appDSUClientSecret;
 
+@property (nonatomic, readonly) NSString *signedInUserEmail;
 @property (nonatomic, readonly) BOOL isSignedIn;
 
 
