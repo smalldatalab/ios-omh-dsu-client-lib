@@ -21,6 +21,7 @@ NSString * const kServerGoogleClientIDKey = @"ServerGoogleClientID";
 NSString * const kAppDSUClientIDKey = @"AppDSUClientID";
 NSString * const kAppDSUClientSecretKey = @"AppDSUClientSecret";
 NSString * const kSignedInUserEmailKey = @"SignedInUserEmail";
+NSString * const kHomeServerCodeKey = @"HomeServerCode";
 
 static OMHClient *_sharedClient = nil;
 
@@ -240,6 +241,17 @@ static OMHClient *_sharedClient = nil;
 + (void)setSignedInUserEmail:(NSString *)signedInUserEmail
 {
     [[NSUserDefaults standardUserDefaults] setObject:signedInUserEmail forKey:kSignedInUserEmailKey];
+    [[NSUserDefaults standardUserDefaults] synchronize];
+}
+
++ (NSString *)homeServerAuthorizationCode
+{
+    return [[NSUserDefaults standardUserDefaults] stringForKey:kHomeServerCodeKey];
+}
+
++ (void)setHomeServerAuthorizationCode:(NSString *)serverCode
+{
+    [[NSUserDefaults standardUserDefaults] setObject:serverCode forKey:kHomeServerCodeKey];
     [[NSUserDefaults standardUserDefaults] synchronize];
 }
 
@@ -518,16 +530,19 @@ static OMHClient *_sharedClient = nil;
     }
     else {
         NSString *serverCode = [GPPSignIn sharedInstance].homeServerAuthorizationCode;
+        if (serverCode == nil) serverCode = [OMHClient homeServerAuthorizationCode];
+        
         if (serverCode != nil) {
             NSLog(@"signed in user email: %@", auth.userEmail);
             [OMHClient setSignedInUserEmail:auth.userEmail];
+            [OMHClient setHomeServerAuthorizationCode:serverCode];
             [self unarchivePendingDataPointsForEmail:auth.userEmail];
             [self signInToDSUWithServerCode:serverCode];
         }
         else {
             NSLog(@"failed to receive server code from google auth");
             if (self.signInDelegate) {
-                NSError *serverCodeError = [NSError errorWithDomain:@"OMHClientError" code:0 userInfo:nil];
+                NSError *serverCodeError = [NSError errorWithDomain:@"OMHClientServerCodeError" code:0 userInfo:nil];
                 [self.signInDelegate OMHClient:self signInFinishedWithError:serverCodeError];
             }
             
