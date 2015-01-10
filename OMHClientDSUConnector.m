@@ -179,6 +179,11 @@ NSString * const kDSUBaseURL = @"https://lifestreams.smalldata.io/dsu/";
     return self.httpSessionManager.reachabilityManager.isReachable;
 }
 
+- (int)pendingDataPointCount
+{
+    return (int)self.pendingDataPoints.count;
+}
+
 
 #pragma mark - HTTP Session Manager
 
@@ -368,6 +373,9 @@ NSString * const kDSUBaseURL = @"https://lifestreams.smalldata.io/dsu/";
             NSLog(@"upload data point succeeded: %@", blockDataPoint[@"header"][@"id"]);
             [self.pendingDataPoints removeObject:dataPoint];
             [self saveClientState];
+            if (self.uploadDelegate) {
+                [self.uploadDelegate OMHClient:self didUploadDataPoint:blockDataPoint];
+            }
         }
         else {
             NSLog(@"upload data point failed: %@, status code: %d", blockDataPoint[@"header"][@"id"], (int)statusCode);
