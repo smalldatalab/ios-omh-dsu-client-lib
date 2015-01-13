@@ -13,6 +13,11 @@
 
 @interface OMHClient : NSObject
 
++ (void)setupClientWithAppGoogleClientID:(NSString *)appGooggleClientID
+                    serverGoogleClientID:(NSString *)serverGoogleClientID
+                          appDSUClientID:(NSString *)appDSUClientID
+                      appDSUClientSecret:(NSString *)appDSUClientSecret;
+
 + (instancetype)sharedClient;
 
 + (UIButton *)googleSignInButton;

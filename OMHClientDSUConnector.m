@@ -51,6 +51,17 @@ static OMHClient *_sharedClient = nil;
 
 @implementation OMHClient
 
++ (void)setupClientWithAppGoogleClientID:(NSString *)appGooggleClientID
+                    serverGoogleClientID:(NSString *)serverGoogleClientID
+                          appDSUClientID:(NSString *)appDSUClientID
+                      appDSUClientSecret:(NSString *)appDSUClientSecret
+{
+    [self setAppGoogleClientID:kOhmageGoogleClientID];
+    [self setServerGoogleClientID:kOMHServerGoogleClientID];
+    [self setAppDSUClientID:kOhmageDSUClientID];
+    [self setAppDSUClientSecret:kOhmageDSUClientSecret];
+}
+
 + (instancetype)sharedClient
 {
     if (_sharedClient == nil) {
