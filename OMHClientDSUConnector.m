@@ -590,6 +590,7 @@ static OMHClient *_sharedClient = nil;
         }
         else {
             OMHLog(@"failed to receive server code from google auth");
+            [self signOut];
             if (self.signInDelegate) {
                 NSError *serverCodeError = [NSError errorWithDomain:@"OMHClientServerCodeError" code:0 userInfo:nil];
                 [self.signInDelegate OMHClient:self signInFinishedWithError:serverCodeError];
