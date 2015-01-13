@@ -12,5 +12,9 @@
 #import "OMHClientDSUConnector.h"
 #import "OMHDataPoint.h"
 
+/**
+ *  Set OMHDEBUG=1 to enable debug logging
+ */
+
 
 #endif

@@ -1,5 +1,5 @@
 //
-//  OMHClientLibrary.h
+//  OMHClientDSUConnector.h
 //  OMHClient
 //
 //  Created by Charles Forkish on 12/11/14.
@@ -43,13 +43,12 @@ sourceApplication:(NSString *)sourceApplication
 - (void)postRequest:(NSString *)request withParameters:(NSDictionary *)parameters
     completionBlock:(void (^)(id responseObject, NSError *error, NSInteger statusCode))block;
 
-//- (void)authenticatedGetRequest:(NSString *)request withParameters:(NSDictionary *)parameters
-//                completionBlock:(void (^)(id responseObject, NSError *error, NSInteger statusCode))block;
-//
-//- (void)authenticatedPostRequest:(NSString *)request withParameters:(NSDictionary *)parameters
-//                 completionBlock:(void (^)(id responseObject, NSError *error, NSInteger statusCode))block;
+- (void)authenticatedGetRequest:(NSString *)request withParameters:(NSDictionary *)parameters
+                completionBlock:(void (^)(id responseObject, NSError *error, NSInteger statusCode))block;
 
-- (void)refreshAuthenticationWithCompletionBlock:(void (^)(BOOL success))block;
+- (void)authenticatedPostRequest:(NSString *)request withParameters:(NSDictionary *)parameters
+                 completionBlock:(void (^)(id responseObject, NSError *error, NSInteger statusCode))block;
+
 - (void)signOut;
 
 - (void)submitDataPoint:(NSDictionary *)dataPoint;
