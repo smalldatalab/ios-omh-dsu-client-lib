@@ -25,16 +25,18 @@ CLIENT SETUP
 
 In order to sign in to the DSU, your app will need four keys:
 
-1) A Google+ client ID for your app (associated with your app's bundle ID)
-2) A Google+ client ID for the DSU server you're using
-3) A DSU client ID for your app
-4) The DSU client secret for your DSU client ID
+1. A Google+ client ID for your app (associated with your app's bundle ID)
+2. A Google+ client ID for the DSU server you're using
+3. A DSU client ID for your app
+4. The DSU client secret for your DSU client ID
 
-Your app should use these keys to setup the client in your app delegate's applicationDidFinishLaunching by calling 
-[OMHClient setupClientWithAppGoogleClientID:<1>
-                       serverGoogleClientID:<2>
-                             appDSUClientID:<3>
-                         appDSUClientSecret:<4>];
+Your app should use these keys to setup the client in your app delegate's `applicationDidFinishLaunching` by calling 
+```
+[OMHClient setupClientWithAppGoogleClientID:(1)
+                       serverGoogleClientID:(2)
+                             appDSUClientID:(3)
+                         appDSUClientSecret:(4)];
+```
 
 CONTRIBUTE
 ----------
