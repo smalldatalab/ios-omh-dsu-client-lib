@@ -9,6 +9,7 @@
 #import <UIKit/UIKit.h>
 
 @protocol OMHSignInDelegate;
+@protocol OMHUploadDelegate;
 
 @interface OMHClient : NSObject
 
@@ -28,9 +29,12 @@
 + (NSString *)signedInUserEmail;
 + (void)setSignedInUserEmail:(NSString *)signedInUserEmail;
 
+
 @property (nonatomic, weak) id<OMHSignInDelegate> signInDelegate;
+@property (nonatomic, weak) id<OMHUploadDelegate> uploadDelegate;
 @property (nonatomic, readonly) BOOL isSignedIn;
 @property (nonatomic, readonly) BOOL isReachable;
+@property (nonatomic, readonly) int pendingDataPointCount;
 
 
 - (BOOL)handleURL:(NSURL *)url
@@ -58,4 +62,8 @@ sourceApplication:(NSString *)sourceApplication
 
 @protocol OMHSignInDelegate
 - (void)OMHClient:(OMHClient *)client signInFinishedWithError:(NSError *)error;
+@end
+
+@protocol OMHUploadDelegate
+- (void)OMHClient:(OMHClient *)client didUploadDataPoint:(NSDictionary *)dataPoint;
 @end
