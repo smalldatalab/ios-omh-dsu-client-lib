@@ -681,7 +681,9 @@ static OMHClient *_sharedClient = nil;
     
     UIViewController *vc = [[UIViewController alloc] init];
     vc.view = webview;
-    [self.signInDelegate presentViewController:vc animated:YES completion:nil];
+    vc.title = @"Sign In";
+    UINavigationController *nav = [[UINavigationController alloc] initWithRootViewController:vc];
+    [self.signInDelegate presentViewController:nav animated:YES completion:nil];
 }
 
 - (BOOL)webView:(UIWebView *)webView shouldStartLoadWithRequest:(NSURLRequest *)request navigationType:(UIWebViewNavigationType)navigationType
