@@ -171,7 +171,6 @@ static OMHClient *_sharedClient = nil;
         OMHClient *archivedClient = (OMHClient *)[NSKeyedUnarchiver unarchiveObjectWithData:encodedClient];
         if (archivedClient != nil) {
             self.pendingDataPoints = archivedClient.pendingDataPoints;
-            [self uploadPendingDataPoints];
         }
     }
 }
@@ -630,6 +629,7 @@ static OMHClient *_sharedClient = nil;
             [self setDSUUploadHeader];
             self.isAuthenticated = YES;
             self.isAuthenticating = NO;
+            [self uploadPendingDataPoints];
             
             if (self.signInDelegate != nil) {
                 [self.signInDelegate OMHClient:self signInFinishedWithError:nil];
@@ -657,6 +657,10 @@ static OMHClient *_sharedClient = nil;
 {
     OMHLog(@"sign out");
     [[OMHClient gppSignIn] signOut];
+    self.dsuAccessToken = nil;
+    self.dsuRefreshToken = nil;
+    self.accessTokenDate = nil;
+    self.accessTokenValidDuration = 0;
     [self saveClientState];
     [[NSUserDefaults standardUserDefaults] removeObjectForKey:kSignedInUserEmailKey];
     
