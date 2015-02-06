@@ -10,6 +10,7 @@
 #import "AFHTTPSessionManager.h"
 #import "AFNetworkActivityIndicatorManager.h"
 #import "OMHDataPoint.h"
+#import "OMHApplication.h"
 
 #import <GooglePlus/GooglePlus.h>
 #import <GoogleOpenSource/GoogleOpenSource.h>
@@ -32,7 +33,7 @@ NSString * const kHomeServerCodeKey = @"HomeServerCode";
 static OMHClient *_sharedClient = nil;
 
 
-@interface OMHClient () <GPPSignInDelegate>
+@interface OMHClient () <GPPSignInDelegate, UIWebViewDelegate>
 
 @property (nonatomic, strong) AFHTTPSessionManager *httpSessionManager;
 
@@ -111,10 +112,21 @@ static OMHClient *_sharedClient = nil;
     return nil;
 }
 
+- (void)dealloc
+{
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+}
+
+
 - (void)commonInit
 {
+    OMHLog(@"common init");
     [self.httpSessionManager.reachabilityManager startMonitoring];
     [OMHClient gppSignIn].delegate = self;
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(handleOpenGoogleAuthNotification:)
+                                                 name:ApplicationOpenGoogleAuthNotification
+                                               object:nil];
 }
 
 - (instancetype)initPrivate
@@ -645,10 +657,49 @@ static OMHClient *_sharedClient = nil;
 {
     OMHLog(@"sign out");
     [[OMHClient gppSignIn] signOut];
+    self.dsuAccessToken = nil;
+    self.dsuRefreshToken = nil;
+    self.accessTokenDate = nil;
+    self.accessTokenValidDuration = 0;
     [self saveClientState];
     [[NSUserDefaults standardUserDefaults] removeObjectForKey:kSignedInUserEmailKey];
     
     [OMHClient releaseShared];
+}
+
+#pragma mark - Google Sign In Web View
+
+- (void)handleOpenGoogleAuthNotification:(NSNotification *)notification
+{
+    NSURL *url = (NSURL *)notification.object;
+    OMHLog(@"handle google auth notification with URL: %@", url);
+    if (url == nil || self.signInDelegate == nil) return;
+    
+    UIWebView *webview = [[UIWebView alloc] init];
+    webview.delegate = self;
+    [webview loadRequest:[NSURLRequest requestWithURL:url]];
+    
+    UIViewController *vc = [[UIViewController alloc] init];
+    vc.view = webview;
+    [self.signInDelegate presentViewController:vc animated:YES completion:nil];
+}
+
+- (BOOL)webView:(UIWebView *)webView shouldStartLoadWithRequest:(NSURLRequest *)request navigationType:(UIWebViewNavigationType)navigationType
+{
+    NSURL *url = [request URL];
+    NSString *bundleID = [[NSBundle mainBundle].bundleIdentifier lowercaseString];
+    OMHLog(@"webview should load url: %@\nBundle ID: %@", url, bundleID);
+    NSString *appPrefix = [bundleID stringByAppendingString:@":/oauth2callback"];
+    if ([[url absoluteString] hasPrefix:appPrefix]) {
+        [GPPURLHandler handleURL:url sourceApplication:@"com.google.chrome.ios" annotation:nil];
+        
+        // Looks like we did log in (onhand of the url), we are logged in, the Google APi handles the rest
+        if (self.signInDelegate != nil) {
+            [self.signInDelegate dismissViewControllerAnimated:YES completion:nil];
+        }
+        return NO;
+    }
+    return YES;
 }
 
 @end
