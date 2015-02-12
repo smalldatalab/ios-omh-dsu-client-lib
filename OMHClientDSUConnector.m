@@ -21,7 +21,7 @@
 #   define OMHLog(...)
 #endif
 
-NSString * const kDSUBaseURL = @"https://lifestreams.smalldata.io/dsu/";
+NSString * const kDSUBaseURL = @"https://ohmage-omh.smalldata.io/dsu";
 
 NSString * const kAppGoogleClientIDKey = @"AppGoogleClientID";
 NSString * const kServerGoogleClientIDKey = @"ServerGoogleClientID";
