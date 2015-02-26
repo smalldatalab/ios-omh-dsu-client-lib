@@ -21,8 +21,9 @@
 #   define OMHLog(...)
 #endif
 
-NSString * const kDSUBaseURL = @"https://ohmage-omh.smalldata.io/dsu";
+NSString * const kDefaultDSUBaseURL = @"https://ohmage-omh.smalldata.io/dsu";
 
+NSString * const kDSUBaseURLKey = @"DSUBaseURLKey";
 NSString * const kAppGoogleClientIDKey = @"AppGoogleClientID";
 NSString * const kServerGoogleClientIDKey = @"ServerGoogleClientID";
 NSString * const kAppDSUClientIDKey = @"AppDSUClientID";
@@ -218,6 +219,24 @@ static GPPSignIn *_gppSignIn = nil;
 
 #pragma mark - Property Accessors
 
++ (NSString *)DSUBaseURL
+{
+    NSString * url = [[NSUserDefaults standardUserDefaults] stringForKey:kDSUBaseURLKey];
+    if (url.length > 0) return url;
+    else return kDefaultDSUBaseURL;
+}
+
++ (void)setDSUBaseURL:(NSString *)DSUBaseURL
+{
+    if (DSUBaseURL.length > 0) {
+        [[NSUserDefaults standardUserDefaults] setObject:DSUBaseURL forKey:kDSUBaseURLKey];
+    }
+    else {
+        [[NSUserDefaults standardUserDefaults] removeObjectForKey:kDefaultDSUBaseURL];
+    }
+    [[NSUserDefaults standardUserDefaults] synchronize];
+}
+
 + (NSString *)appGoogleClientID
 {
     return [[NSUserDefaults standardUserDefaults] stringForKey:kAppGoogleClientIDKey];
@@ -325,7 +344,7 @@ static GPPSignIn *_gppSignIn = nil;
 - (AFHTTPSessionManager *)httpSessionManager
 {
     if (_httpSessionManager == nil) {
-        _httpSessionManager = [[AFHTTPSessionManager alloc] initWithBaseURL:[NSURL URLWithString:kDSUBaseURL]];
+        _httpSessionManager = [[AFHTTPSessionManager alloc] initWithBaseURL:[NSURL URLWithString:[OMHClient DSUBaseURL]]];
         
         // setup reachability
         __weak OMHClient *weakSelf = self;
@@ -676,7 +695,6 @@ static GPPSignIn *_gppSignIn = nil;
 - (void)handleOpenGoogleAuthNotification:(NSNotification *)notification
 {
     NSURL *url = (NSURL *)notification.object;
-    OMHLog(@"handle google auth notification with URL: %@", url);
     if (url == nil || self.signInDelegate == nil) return;
     
     UIWebView *webview = [[UIWebView alloc] init];
@@ -700,7 +718,6 @@ static GPPSignIn *_gppSignIn = nil;
 {
     NSURL *url = [request URL];
     NSString *bundleID = [[NSBundle mainBundle].bundleIdentifier lowercaseString];
-    OMHLog(@"webview should load url: %@\nBundle ID: %@", url, bundleID);
     NSString *appPrefix = [bundleID stringByAppendingString:@":/oauth2callback"];
     if ([[url absoluteString] hasPrefix:appPrefix]) {
         [GPPURLHandler handleURL:url sourceApplication:@"com.google.chrome.ios" annotation:nil];
