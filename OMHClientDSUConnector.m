@@ -219,6 +219,11 @@ static GPPSignIn *_gppSignIn = nil;
 
 #pragma mark - Property Accessors
 
++ (NSString *)defaultDSUBaseURL
+{
+    return kDefaultDSUBaseURL;
+}
+
 + (NSString *)DSUBaseURL
 {
     NSString * url = [[NSUserDefaults standardUserDefaults] stringForKey:kDSUBaseURLKey];

@@ -23,6 +23,7 @@
 + (UIButton *)googleSignInButton;
 
 // global properties
++ (NSString *)defaultDSUBaseURL;
 + (NSString *)DSUBaseURL;
 + (void)setDSUBaseURL:(NSString *)DSUBaseURL;
 + (NSString *)appGoogleClientID;
