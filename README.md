@@ -43,7 +43,7 @@ CONTRIBUTE
 
 If you would like to contribute code to the Open mHealth iOS client you can do so through GitHub by forking the repository and sending a pull request.
 
-You may [file an issue](https://github.com/cforkish/OMHClient/issues/new) if you find bugs or would like to add a new feature.
+You may [file an issue](https://github.com/smalldatalab/ios-omh-dsu-client-lib/issues) if you find bugs or would like to add a new feature.
 
 LICENSE
 -------
