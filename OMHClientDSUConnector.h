@@ -43,6 +43,7 @@
 @property (nonatomic, readonly) BOOL isSignedIn;
 @property (nonatomic, readonly) BOOL isReachable;
 @property (nonatomic, readonly) int pendingDataPointCount;
+@property (nonatomic, assign) BOOL allowsCellularAccess;
 
 
 - (BOOL)handleURL:(NSURL *)url
@@ -64,13 +65,19 @@ sourceApplication:(NSString *)sourceApplication
 - (void)signOut;
 
 - (void)submitDataPoint:(NSDictionary *)dataPoint;
+- (void)submitDataPoint:(NSDictionary *)dataPoint
+   withMediaAttachments:(NSArray *)mediaAttachments;
+
+- (void)resetSessionManagers;
 
 @end
 
 
-@protocol OMHSignInDelegate
+@protocol OMHSignInDelegate<NSObject>
 
 - (void)OMHClient:(OMHClient *)client signInFinishedWithError:(NSError *)error;
+- (void)OMHClientSignInCancelled:(OMHClient *)client;
+
 
 // we need these for presenting the google+ sign in web view
 - (void)presentViewController:(UIViewController *)viewControllerToPresent animated:(BOOL)flag completion:(void (^)(void))completion;
