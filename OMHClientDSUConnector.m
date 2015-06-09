@@ -387,6 +387,11 @@ static GPPSignIn *_gppSignIn = nil;
     return _backgroundSessionManager;
 }
 
+- (void)setJSONResponseSerializerRemovesNulls:(BOOL)removeNulls
+{
+    ((AFJSONResponseSerializer *)self.httpSessionManager.responseSerializer).removesKeysWithNullValues = removeNulls;
+}
+
 - (void)resetSessionManagers
 {
     _httpSessionManager = nil;

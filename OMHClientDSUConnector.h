@@ -68,6 +68,7 @@ sourceApplication:(NSString *)sourceApplication
 - (void)submitDataPoint:(NSDictionary *)dataPoint
    withMediaAttachments:(NSArray *)mediaAttachments;
 
+- (void)setJSONResponseSerializerRemovesNulls:(BOOL)removeNulls;
 - (void)resetSessionManagers;
 
 @end
