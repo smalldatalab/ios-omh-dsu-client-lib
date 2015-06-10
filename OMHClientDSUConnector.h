@@ -13,29 +13,21 @@
 
 @interface OMHClient : NSObject
 
-+ (void)setupClientWithAppGoogleClientID:(NSString *)appGooggleClientID
-                    serverGoogleClientID:(NSString *)serverGoogleClientID
-                          appDSUClientID:(NSString *)appDSUClientID
-                      appDSUClientSecret:(NSString *)appDSUClientSecret;
++ (void)setupClientWithClientID:(NSString *)clientID
+                   clientSecret:(NSString *)clientSecret;
 
 + (instancetype)sharedClient;
-
-+ (UIButton *)googleSignInButton;
 
 // global properties
 + (NSString *)defaultDSUBaseURL;
 + (NSString *)DSUBaseURL;
 + (void)setDSUBaseURL:(NSString *)DSUBaseURL;
-+ (NSString *)appGoogleClientID;
-+ (void)setAppGoogleClientID:(NSString *)appGoogleClientID;
-+ (NSString *)serverGoogleClientID;
-+ (void)setServerGoogleClientID:(NSString *)serverGoogleClientID;
-+ (NSString *)appDSUClientID;
-+ (void)setAppDSUClientID:(NSString *)appDSUClientID;
-+ (NSString *)appDSUClientSecret;
-+ (void)setAppDSUClientSecret:(NSString *)appDSUClientSecret;
-+ (NSString *)signedInUserEmail;
-+ (void)setSignedInUserEmail:(NSString *)signedInUserEmail;
++ (NSString *)clientID;
++ (void)setClientID:(NSString *)clientID;
++ (NSString *)clientSecret;
++ (void)setClientSecret:(NSString *)clientSecret;
++ (NSString *)signedInUsername;
++ (void)setSignedInUsername:(NSString *)signedInUsername;
 
 
 @property (nonatomic, weak) id<OMHSignInDelegate> signInDelegate;
@@ -46,9 +38,8 @@
 @property (nonatomic, assign) BOOL allowsCellularAccess;
 
 
-- (BOOL)handleURL:(NSURL *)url
-sourceApplication:(NSString *)sourceApplication
-       annotation:(id)annotation;
+- (void)signInWithUsername:(NSString *)username password:(NSString *)password;
+- (void)signOut;
 
 - (void)getRequest:(NSString *)request withParameters:(NSDictionary *)parameters
    completionBlock:(void (^)(id responseObject, NSError *error, NSInteger statusCode))block;
@@ -62,7 +53,6 @@ sourceApplication:(NSString *)sourceApplication
 - (void)authenticatedPostRequest:(NSString *)request withParameters:(NSDictionary *)parameters
                  completionBlock:(void (^)(id responseObject, NSError *error, NSInteger statusCode))block;
 
-- (void)signOut;
 
 - (void)submitDataPoint:(NSDictionary *)dataPoint;
 - (void)submitDataPoint:(NSDictionary *)dataPoint
@@ -77,12 +67,6 @@ sourceApplication:(NSString *)sourceApplication
 @protocol OMHSignInDelegate<NSObject>
 
 - (void)OMHClient:(OMHClient *)client signInFinishedWithError:(NSError *)error;
-- (void)OMHClientSignInCancelled:(OMHClient *)client;
-
-
-// we need these for presenting the google+ sign in web view
-- (void)presentViewController:(UIViewController *)viewControllerToPresent animated:(BOOL)flag completion:(void (^)(void))completion;
-- (void)dismissViewControllerAnimated:(BOOL)flag completion:(void (^)(void))completion;
 
 @end
 
