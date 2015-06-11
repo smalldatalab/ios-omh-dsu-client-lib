@@ -595,10 +595,6 @@ static GPPSignIn *_gppSignIn = nil;
                 [self.pendingDataPoints removeObject:blockDataPoint];
                 [self saveClientState];
             }
-            else if (statusCode == 0) {
-                // something went wrong. try again.
-                [self uploadDataPoint:blockDataPoint];
-            }
         }
     }];
 }
