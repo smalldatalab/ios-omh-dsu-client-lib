@@ -52,6 +52,8 @@ static GPPSignIn *_gppSignIn = nil;
 
 @property (nonatomic, weak) UIActivityIndicatorView *activityIndicator;
 
+@property (strong) NSTimer *saveTimer;
+
 @end
 
 @implementation OMHClient
@@ -180,9 +182,11 @@ static GPPSignIn *_gppSignIn = nil;
     }
 }
 
-- (void)saveClientState
+- (void)deferredSave
 {
-    OMHLog(@"saving client state, pending: %d", (int)self.pendingDataPoints.count);
+    [self.saveTimer invalidate];
+    self.saveTimer = nil;
+    
     NSString *signedInUserEmail = [OMHClient signedInUserEmail];
     if (signedInUserEmail == nil) {
         OMHLog(@"attempting to save client with no signed-in user");
@@ -193,6 +197,14 @@ static GPPSignIn *_gppSignIn = nil;
     NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
     [userDefaults setObject:encodedClient forKey:[OMHClient archiveKeyForEmail:signedInUserEmail]];
     [userDefaults synchronize];
+}
+
+- (void)saveClientState
+{
+    OMHLog(@"saving client state, pending: %d, timer: %d", (int)self.pendingDataPoints.count, self.saveTimer != nil);
+    if (self.saveTimer == nil) {
+        self.saveTimer = [NSTimer scheduledTimerWithTimeInterval:10 target:self selector:@selector(deferredSave) userInfo:nil repeats:NO];
+    }
 }
 
 - (NSString *)encodedClientIDAndSecret
@@ -440,13 +452,17 @@ static GPPSignIn *_gppSignIn = nil;
     OMHLog(@"reachability status changed: %d", (int)status);
     // when network becomes reachable, re-authenticate user
     // and upload any pending survey responses
-    if (status > AFNetworkReachabilityStatusNotReachable) {
+    BOOL reachable = (status > AFNetworkReachabilityStatusNotReachable);
+    if (reachable) {
         if ([self accessTokenHasExpired] || !self.isAuthenticated) {
             [self refreshAuthenticationWithCompletionBlock:nil];
         }
         else {
             [self uploadPendingDataPoints];
         }
+    }
+    if (self.reachabilityDelegate != nil) {
+        [self.reachabilityDelegate OMHClient:self reachabilityStatusChanged:reachable];
     }
 }
 
@@ -484,6 +500,7 @@ static GPPSignIn *_gppSignIn = nil;
 {
     NSDate *validDate = [self.accessTokenDate dateByAddingTimeInterval:self.accessTokenValidDuration];
     NSComparisonResult comp = [validDate compare:[NSDate date]];
+    OMHLog(@"valid date: %@, now: %@, ascending: %d", validDate, [NSDate date], comp == NSOrderedAscending);
     return (comp == NSOrderedAscending);
 }
 
@@ -577,6 +594,10 @@ static GPPSignIn *_gppSignIn = nil;
                 // conflict, data point already uploaded
                 [self.pendingDataPoints removeObject:blockDataPoint];
                 [self saveClientState];
+            }
+            else if (statusCode == 0) {
+                // something went wrong. try again.
+                [self uploadDataPoint:blockDataPoint];
             }
         }
     }];
