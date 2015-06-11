@@ -32,6 +32,7 @@ static OMHClient *_sharedClient = nil;
 @property (nonatomic, strong) AFHTTPSessionManager *httpSessionManager;
 @property (nonatomic, strong) AFHTTPSessionManager *backgroundSessionManager;
 
+@property (nonatomic, strong) NSString *userPassword;
 @property (nonatomic, strong) NSString *dsuAccessToken;
 @property (nonatomic, strong) NSString *dsuRefreshToken;
 @property (nonatomic, strong) NSDate *accessTokenDate;
@@ -106,11 +107,6 @@ static OMHClient *_sharedClient = nil;
     return nil;
 }
 
-- (void)dealloc
-{
-    [[NSNotificationCenter defaultCenter] removeObserver:self];
-}
-
 
 - (void)commonInit
 {
@@ -133,6 +129,7 @@ static OMHClient *_sharedClient = nil;
 {
     self = [super init];
     if (self != nil) {
+        _userPassword = [decoder decodeObjectForKey:@"client.userPassword"];
         _dsuAccessToken = [decoder decodeObjectForKey:@"client.dsuAccessToken"];
         _dsuRefreshToken = [decoder decodeObjectForKey:@"client.dsuRefreshToken"];
         _pendingDataPoints = [decoder decodeObjectForKey:@"client.pendingDataPoints"];
@@ -149,6 +146,7 @@ static OMHClient *_sharedClient = nil;
 
 - (void)encodeWithCoder:(NSCoder *)encoder
 {
+    [encoder encodeObject:self.userPassword forKey:@"client.userPassword"];
     [encoder encodeObject:self.dsuAccessToken forKey:@"client.dsuAccessToken"];
     [encoder encodeObject:self.dsuRefreshToken forKey:@"client.dsuRefreshToken"];
     [encoder encodeObject:self.pendingDataPoints forKey:@"client.pendingDataPoints"];
@@ -165,6 +163,11 @@ static OMHClient *_sharedClient = nil;
         OMHClient *archivedClient = (OMHClient *)[NSKeyedUnarchiver unarchiveObjectWithData:encodedClient];
         if (archivedClient != nil) {
             self.pendingDataPoints = archivedClient.pendingDataPoints;
+            self.pendingRichMediaDataPoints = archivedClient.pendingRichMediaDataPoints;
+            OMHLog(@"Unarchived %@ data points and %@ rich data points for username: %@",
+                   [@(self.pendingDataPoints.count) stringValue],
+                   [@(self.pendingRichMediaDataPoints.count) stringValue],
+                   username);
         }
     }
 }
@@ -327,7 +330,13 @@ static OMHClient *_sharedClient = nil;
 - (AFHTTPSessionManager *)backgroundSessionManager
 {
     if (_backgroundSessionManager == nil) {
-        NSURLSessionConfiguration *config = [NSURLSessionConfiguration backgroundSessionConfiguration:@"OMHBackgroundSessionConfiguration"];
+        NSURLSessionConfiguration *config;
+        if ([NSURLSessionConfiguration respondsToSelector:@selector(backgroundSessionConfigurationWithIdentifier:)]) {
+            config = [NSURLSessionConfiguration backgroundSessionConfigurationWithIdentifier:@"OMHBackgroundSessionConfiguration"];
+        }
+        else {
+            config = [NSURLSessionConfiguration backgroundSessionConfiguration:@"OMHBackgroundSessionConfiguration"];
+        }
         _backgroundSessionManager = [[AFHTTPSessionManager alloc] initWithBaseURL:self.baseURL sessionConfiguration:config];
         _backgroundSessionManager.requestSerializer = [AFJSONRequestSerializer serializer];
     }
@@ -360,6 +369,7 @@ static OMHClient *_sharedClient = nil;
     withParameters:(NSDictionary *)parameters
    completionBlock:(void (^)(id responseObject, NSError *error, NSInteger statusCode))block
 {
+//    OMHLog(@"request: %@", request);
     [self.httpSessionManager GET:request parameters:parameters success:^(NSURLSessionDataTask *task, id responseObject) {
         // request succeeded
         block(responseObject, nil, [self statusCodeFromSessionTask:task]);
@@ -387,6 +397,7 @@ static OMHClient *_sharedClient = nil;
                  withParameters:(NSDictionary *)parameters
                 completionBlock:(void (^)(id responseObject, NSError *error, NSInteger statusCode))block
 {
+//    OMHLog(@"request: %@", request);
     __block NSString *blockRequest = [request copy];
     __block NSDictionary *blockParameters = [parameters copy];
     __block void (^blockCompletionBlock)(id responseObject, NSError *error, NSInteger statusCode) = [block copy];
@@ -458,61 +469,7 @@ static OMHClient *_sharedClient = nil;
     }
 }
 
-- (void)storeAuthenticationResponse:(NSDictionary *)responseDictionary
-{
-    self.dsuAccessToken = responseDictionary[@"access_token"];
-    self.dsuRefreshToken = responseDictionary[@"refresh_token"];
-    self.accessTokenDate = [NSDate date];
-    self.accessTokenValidDuration = [responseDictionary[@"expires_in"] doubleValue];
-    [self saveClientState];
-}
-
-- (BOOL)accessTokenHasExpired
-{
-    NSDate *validDate = [self.accessTokenDate dateByAddingTimeInterval:self.accessTokenValidDuration];
-    NSComparisonResult comp = [validDate compare:[NSDate date]];
-    return (comp == NSOrderedAscending);
-}
-
-- (void)refreshAuthenticationWithCompletionBlock:(void (^)(NSError *error))block
-{
-    OMHLog(@"refresh authentication, isAuthenticating: %d, refreshToken: %d", self.isAuthenticating, (self.dsuRefreshToken != nil));
-    
-    if (block) {
-        [self.authRefreshCompletionBlocks addObject:[block copy]];
-    }
-    
-    if (self.isAuthenticating || self.dsuRefreshToken == nil) return;
-    
-    self.isAuthenticating = YES;
-    [self setDSUSignInHeader];
-    
-    NSString *request = @"oauth/token";
-    NSDictionary *parameters = @{@"refresh_token" : self.dsuRefreshToken,
-                                 @"grant_type" : @"refresh_token"};
-    
-    [self postRequest:request withParameters:parameters completionBlock:^(id responseObject, NSError *error, NSInteger statusCode) {
-        if (error == nil) {
-            OMHLog(@"refresh authentication success");
-            
-            [self storeAuthenticationResponse:(NSDictionary *)responseObject];
-            [self setDSUUploadHeader];
-            self.isAuthenticated = YES;
-            [self uploadPendingDataPoints];
-        }
-        else {
-            OMHLog(@"refresh authentiation failed: %@", error);
-            self.isAuthenticated = NO;
-        }
-        
-        self.isAuthenticating = NO;
-        
-        for (void (^completionBlock)(NSError *) in self.authRefreshCompletionBlocks) {
-            completionBlock(error);
-        }
-        [self.authRefreshCompletionBlocks removeAllObjects];
-    }];
-}
+#pragma mark - Data Upload
 
 - (void)submitDataPoint:(OMHDataPoint *)dataPoint
 {
@@ -538,7 +495,7 @@ static OMHClient *_sharedClient = nil;
 
     [self saveClientState];
     
-    if (self.isAuthenticating) return;
+    if (self.isAuthenticating || !self.isReachable) return;
     
     if ([self accessTokenHasExpired] || !self.isAuthenticated) {
         [self refreshAuthenticationWithCompletionBlock:nil];
@@ -682,6 +639,25 @@ static OMHClient *_sharedClient = nil;
 
 - (void)signInWithUsername:(NSString *)username password:(NSString *)password
 {
+    __block NSString *blockUsername = username;
+    __block NSString *blockPassword = password;
+    
+    [self signInWithUsername:username password:password completionBlock:^(NSError *error) {
+    
+        if (error == nil) {
+            [OMHClient setSignedInUsername:blockUsername];
+            self.userPassword = blockPassword;
+            [self unarchivePendingDataPointsForUsername:blockUsername];
+        }
+        
+        if (self.signInDelegate != nil) {
+            [self.signInDelegate OMHClient:self signInFinishedWithError:error];
+        }
+    }];
+}
+
+- (void)signInWithUsername:(NSString *)username password:(NSString *)password completionBlock:(void (^)(NSError *error))block
+{
     if (![self setDSUSignInHeader]) return;
     
     NSString *request =  @"oauth/token";
@@ -691,39 +667,92 @@ static OMHClient *_sharedClient = nil;
     
     self.isAuthenticating = YES;
     [self postRequest:request withParameters:parameters completionBlock:^(id responseObject, NSError *error, NSInteger statusCode) {
-        if (error == nil) {
-            OMHLog(@"DSU login success, response object: %@", responseObject);
-            [self storeAuthenticationResponse:(NSDictionary *)responseObject];
-            [self setDSUUploadHeader];
-            self.isAuthenticated = YES;
-            self.isAuthenticating = NO;
-            [self uploadPendingDataPoints];
-            
-            if (self.signInDelegate != nil) {
-                [self.signInDelegate OMHClient:self signInFinishedWithError:nil];
-            }
-        }
-        else {
-            OMHLog(@"DSU login failure, error: %@", error);
-            self.isAuthenticating = NO;
-            [self signOut];
-            
-            if (self.signInDelegate != nil) {
-                [self.signInDelegate OMHClient:self signInFinishedWithError:error];
-            }
+        
+        [self authenticationCompletedWithResponse:responseObject error:error];
+        
+        if (block != nil) {
+            block(error);
         }
     }];
+}
+
+- (void)refreshAuthenticationWithCompletionBlock:(void (^)(NSError *error))block
+{
+    OMHLog(@"refresh authentication, isAuthenticating: %d, refreshToken: %d", self.isAuthenticating, (self.dsuRefreshToken != nil));
+    
+    if (block) {
+        [self.authRefreshCompletionBlocks addObject:[block copy]];
+    }
+    
+    if (self.isAuthenticating || self.dsuRefreshToken == nil) return;
+    
+    self.isAuthenticating = YES;
+    [self setDSUSignInHeader];
+    
+    NSString *request = @"oauth/token";
+    NSDictionary *parameters = @{@"refresh_token" : self.dsuRefreshToken,
+                                 @"grant_type" : @"refresh_token"};
+    
+    [self postRequest:request withParameters:parameters completionBlock:^(id responseObject, NSError *error, NSInteger statusCode) {
+        if (error != nil) {
+            OMHLog(@"auth refresh failed. attempting username/password sign-in");
+            [self signInWithUsername:[OMHClient signedInUsername] password:self.userPassword completionBlock:nil];
+        }
+        else {
+            [self authenticationCompletedWithResponse:responseObject error:error];
+        }
+    }];
+}
+
+- (void)authenticationCompletedWithResponse:(NSDictionary *)response error:(NSError *)error
+{
+    if (error == nil) {
+        OMHLog(@"authentication success");
+        
+        [self storeAuthenticationResponse:response];
+        [self setDSUUploadHeader];
+        self.isAuthenticated = YES;
+        [self uploadPendingDataPoints];
+    }
+    else {
+        OMHLog(@"authentiation failed: %@", error);
+        self.isAuthenticated = NO;
+    }
+    
+    self.isAuthenticating = NO;
+    
+    for (void (^completionBlock)(NSError *) in self.authRefreshCompletionBlocks) {
+        completionBlock(error);
+    }
+    [self.authRefreshCompletionBlocks removeAllObjects];
 }
 
 - (void)signOut
 {
     OMHLog(@"sign out");
+    self.userPassword = nil;
     self.dsuAccessToken = nil;
     self.dsuRefreshToken = nil;
     self.accessTokenDate = nil;
     self.accessTokenValidDuration = 0;
     [self saveClientState];
     [[NSUserDefaults standardUserDefaults] removeObjectForKey:kSignedInUsernameKey];
+}
+
+- (void)storeAuthenticationResponse:(NSDictionary *)responseDictionary
+{
+    self.dsuAccessToken = responseDictionary[@"access_token"];
+    self.dsuRefreshToken = responseDictionary[@"refresh_token"];
+    self.accessTokenDate = [NSDate date];
+    self.accessTokenValidDuration = [responseDictionary[@"expires_in"] doubleValue];
+    [self saveClientState];
+}
+
+- (BOOL)accessTokenHasExpired
+{
+    NSDate *validDate = [self.accessTokenDate dateByAddingTimeInterval:self.accessTokenValidDuration];
+    NSComparisonResult comp = [validDate compare:[NSDate date]];
+    return (comp == NSOrderedAscending);
 }
 
 
