@@ -11,15 +11,12 @@
 
 #import "OMHClientDSUConnector.h"
 #import "OMHDataPoint.h"
-#import "OMHApplication.h"
 
 /**
  * Setup the OMHClient with in your app delegate's applicationDidFinishLaunching with a call to
  *
- * [OMHClient setupClientWithAppGoogleClientID:<your app's Google client ID>
- *                        serverGoogleClientID:<a DSU server Google client ID>
- *                              appDSUClientID:<your app's DSU client ID>
- *                          appDSUClientSecret:<your app's DSU client secret>];
+ * [OMHClient setupClientWithClientID:<your app's DSU client ID> 
+ *                       clientSecret:<your app's DSU client secret>];
  */
 
 /**
