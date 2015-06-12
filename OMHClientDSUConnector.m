@@ -544,7 +544,7 @@ static OMHClient *_sharedClient = nil;
 {
     __block OMHDataPoint *blockDataPoint = dataPoint;
     [self postRequest:[self dataPointsRequestString] withParameters:dataPoint completionBlock:^(id responseObject, NSError *error, NSInteger statusCode) {
-        if (error == nil || statusCode == 409) {
+        if (error == nil || statusCode == 409) { // 409 means conflict, data point already uploaded
             OMHLog(@"upload data point succeeded: %@, status code: %d", blockDataPoint.header.headerID, (int)statusCode);
             [self.pendingDataPoints removeObject:blockDataPoint];
             [self saveClientState];
