@@ -716,6 +716,7 @@ static GPPSignIn *_gppSignIn = nil;
 - (void)signInWithUsername:(NSString *)username password:(NSString *)password completionBlock:(void (^)(NSError *error))block
 {
     if (![self setDSUSignInHeader]) return;
+    if (username == nil || password == nil) return;
     
     NSString *request =  @"oauth/token";
     NSDictionary *parameters = @{@"grant_type" : @"password",
@@ -751,7 +752,7 @@ static GPPSignIn *_gppSignIn = nil;
                                  @"grant_type" : @"refresh_token"};
     
     [self postRequest:request withParameters:parameters completionBlock:^(id responseObject, NSError *error, NSInteger statusCode) {
-        if (error != nil) {
+        if (error != nil && statusCode > 0 && self.userPassword != nil) {
             OMHLog(@"auth refresh failed. attempting username/password sign-in");
             [self signInWithUsername:[OMHClient signedInUsername] password:self.userPassword completionBlock:nil];
         }
