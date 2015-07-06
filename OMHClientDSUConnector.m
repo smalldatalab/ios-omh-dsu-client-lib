@@ -25,7 +25,6 @@ NSString * const kDefaultDSUBaseURL = @"https://ohmage-omh.smalldata.io/dsu";
 
 NSString * const kDSUBaseURLKey = @"DSUBaseURLKey";
 NSString * const kAppGoogleClientIDKey = @"AppGoogleClientID";
-NSString * const kServerGoogleClientIDKey = @"ServerGoogleClientID";
 NSString * const kAppDSUClientIDKey = @"AppDSUClientID";
 NSString * const kAppDSUClientSecretKey = @"AppDSUClientSecret";
 NSString * const kSignedInUsernameKey = @"SignedInUsername";
@@ -61,12 +60,10 @@ static GPPSignIn *_gppSignIn = nil;
 @implementation OMHClient
 
 + (void)setupClientWithAppGoogleClientID:(NSString *)appGooggleClientID
-                    serverGoogleClientID:(NSString *)serverGoogleClientID
                           appDSUClientID:(NSString *)appDSUClientID
                       appDSUClientSecret:(NSString *)appDSUClientSecret
 {
     [self setAppGoogleClientID:appGooggleClientID];
-    [self setServerGoogleClientID:serverGoogleClientID];
     [self setAppDSUClientID:appDSUClientID];
     [self setAppDSUClientSecret:appDSUClientSecret];
 }
@@ -278,18 +275,6 @@ static GPPSignIn *_gppSignIn = nil;
 {
     [self gppSignIn].clientID = appGoogleClientID;
     [[NSUserDefaults standardUserDefaults] setObject:appGoogleClientID forKey:kAppGoogleClientIDKey];
-    [[NSUserDefaults standardUserDefaults] synchronize];
-}
-
-+ (NSString *)serverGoogleClientID
-{
-    return [[NSUserDefaults standardUserDefaults] stringForKey:kServerGoogleClientIDKey];
-}
-
-+ (void)setServerGoogleClientID:(NSString *)serverGoogleClientID
-{
-    [self gppSignIn].homeServerClientID = serverGoogleClientID;
-    [[NSUserDefaults standardUserDefaults] setObject:serverGoogleClientID forKey:kServerGoogleClientIDKey];
     [[NSUserDefaults standardUserDefaults] synchronize];
 }
 
@@ -517,6 +502,11 @@ static GPPSignIn *_gppSignIn = nil;
     else {
         return NO;
     }
+}
+
+- (void)setGoogleSignInHeader
+{
+    self.httpSessionManager.requestSerializer = [AFHTTPRequestSerializer serializer];
 }
 
 - (void)setDSUUploadHeader
@@ -793,6 +783,7 @@ static GPPSignIn *_gppSignIn = nil;
 {
     OMHLog(@"sign out");
     [[OMHClient gppSignIn] signOut];
+    [OMHClient resetGPPSignIn];
     self.userPassword = nil;
     self.dsuAccessToken = nil;
     self.dsuRefreshToken = nil;
@@ -840,6 +831,13 @@ static GPPSignIn *_gppSignIn = nil;
     return _gppSignIn;
 }
 
++ (void)resetGPPSignIn
+{
+    _gppSignIn = nil;
+    [self gppSignIn].clientID = [self appGoogleClientID];
+    [self gppSignIn].delegate = [self sharedClient];
+}
+
 - (void)finishedWithAuth: (GTMOAuth2Authentication *)auth
                    error: (NSError *) error
 {
@@ -850,18 +848,18 @@ static GPPSignIn *_gppSignIn = nil;
         }
     }
     else {
-        NSString *serverCode = [GPPSignIn sharedInstance].homeServerAuthorizationCode;
+        NSString *accessToken = auth.accessToken;
         
-        if (serverCode != nil) {
+        if (accessToken != nil) {
             OMHLog(@"signed in user email: %@", auth.userEmail);
             [OMHClient setSignedInUsername:auth.userEmail];
-            [self signInToDSUWithServerCode:serverCode];
+            [self signInToDSUWithAccessToken:accessToken];
         }
         else {
-            OMHLog(@"failed to receive server code from google auth");
+            OMHLog(@"failed to receive access token from google auth");
             [self signOut];
             if (self.signInDelegate) {
-                NSError *serverCodeError = [NSError errorWithDomain:@"OMHClientServerCodeError" code:0 userInfo:nil];
+                NSError *serverCodeError = [NSError errorWithDomain:@"OMHClientAccessTokenError" code:0 userInfo:nil];
                 [self.signInDelegate OMHClient:self signInFinishedWithError:serverCodeError];
             }
             
@@ -869,18 +867,21 @@ static GPPSignIn *_gppSignIn = nil;
     }
 }
 
-- (void)signInToDSUWithServerCode:(NSString *)serverCode
+- (void)signInToDSUWithAccessToken:(NSString *)accessToken
 {
     NSString *appDSUClientID = [OMHClient appDSUClientID];
-    if (serverCode == nil || appDSUClientID == nil) return;
-    if (![self setDSUSignInHeader]) return;
+    NSString *appDSUClientSecret = [OMHClient appDSUClientSecret];
+    if (accessToken == nil || appDSUClientID == nil || appDSUClientSecret == nil) return;
     
-    NSString *request =  @"google-signin";
-    NSString *code = [NSString stringWithFormat:@"fromApp_%@", serverCode];
-    NSDictionary *parameters = @{@"code": code, @"client_id" : appDSUClientID};
+    [self setGoogleSignInHeader];
+    
+    NSString *request =  @"social-signin/google";
+    NSDictionary *parameters = @{@"client_id" : appDSUClientID,
+                                 @"client_secret" : appDSUClientSecret,
+                                 @"access_token" : accessToken};
     
     self.isAuthenticating = YES;
-    [self getRequest:request withParameters:parameters completionBlock:^(id responseObject, NSError *error, NSInteger statusCode) {
+    [self postRequest:request withParameters:parameters completionBlock:^(id responseObject, NSError *error, NSInteger statusCode) {
         
         if (error == nil) {
             [self unarchivePendingDataPointsForUsername:[OMHClient signedInUsername]];

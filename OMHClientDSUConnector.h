@@ -15,7 +15,7 @@
 @interface OMHClient : NSObject
 
 + (void)setupClientWithAppGoogleClientID:(NSString *)appGooggleClientID
-                    serverGoogleClientID:(NSString *)serverGoogleClientID
+//                    serverGoogleClientID:(NSString *)serverGoogleClientID
                           appDSUClientID:(NSString *)appDSUClientID
                       appDSUClientSecret:(NSString *)appDSUClientSecret;
 
@@ -29,8 +29,8 @@
 + (void)setDSUBaseURL:(NSString *)DSUBaseURL;
 + (NSString *)appGoogleClientID;
 + (void)setAppGoogleClientID:(NSString *)appGoogleClientID;
-+ (NSString *)serverGoogleClientID;
-+ (void)setServerGoogleClientID:(NSString *)serverGoogleClientID;
+//+ (NSString *)serverGoogleClientID;
+//+ (void)setServerGoogleClientID:(NSString *)serverGoogleClientID;
 + (NSString *)appDSUClientID;
 + (void)setAppDSUClientID:(NSString *)appDSUClientID;
 + (NSString *)appDSUClientSecret;
