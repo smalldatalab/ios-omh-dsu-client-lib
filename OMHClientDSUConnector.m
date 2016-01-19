@@ -536,11 +536,15 @@ static GPPSignIn *_gppSignIn = nil;
     
     OMHRichMediaDataPoint *rmdp = nil;
     if (mediaAttachments == nil) {
-        [self.pendingDataPoints addObject:dataPoint];\
+        @synchronized(self.pendingDataPoints) {
+            [self.pendingDataPoints addObject:dataPoint];
+        }
     }
     else {
         rmdp = [OMHRichMediaDataPoint richMediaDataPointWithDataPoint:dataPoint mediaAttachments:mediaAttachments];
-        [self.pendingRichMediaDataPoints addObject:rmdp];
+        @synchronized(self.pendingRichMediaDataPoints) {
+            [self.pendingRichMediaDataPoints addObject:rmdp];
+        }
     }
     
 
@@ -566,29 +570,51 @@ static GPPSignIn *_gppSignIn = nil;
 {
     OMHLog(@"uploading pending data points: %d, rich media: %d, isAuthenticating: %d", (int)self.pendingDataPoints.count, (int)self.pendingRichMediaDataPoints.count, self.isAuthenticating);
     
-    for (OMHDataPoint *dataPoint in self.pendingDataPoints) {
-        [self uploadDataPoint:dataPoint];
+    @synchronized(self.pendingDataPoints) {
+        for (OMHDataPoint *dataPoint in self.pendingDataPoints) {
+            [self uploadDataPoint:dataPoint];
+        }
     }
     
-    for (OMHRichMediaDataPoint *rmdp in self.pendingRichMediaDataPoints) {
-        [self uploadRichMediaDataPoint:rmdp];
+    @synchronized(self.pendingRichMediaDataPoints) {
+        for (OMHRichMediaDataPoint *rmdp in self.pendingRichMediaDataPoints) {
+            [self uploadRichMediaDataPoint:rmdp];
+        }
     }
+}
+
+- (void)notifyUploadBegan:(OMHDataPoint *)dataPoint
+{
+    [self.uploadDelegate OMHClient:self dataPointUploadBegan:dataPoint];
 }
 
 - (void)uploadDataPoint:(OMHDataPoint *)dataPoint
 {
+//    [NSOperationQueue currentQueue] performSelectorInBackground:<#(SEL)#> withObject:<#(id)#>
+    [self performSelectorInBackground:@selector(notifyUploadBegan:) withObject:dataPoint];
     __block OMHDataPoint *blockDataPoint = dataPoint;
     [self postRequest:[self dataPointsRequestString] withParameters:dataPoint completionBlock:^(id responseObject, NSError *error, NSInteger statusCode) {
         if (error == nil || statusCode == 409) { // 409 means conflict, data point already uploaded
             OMHLog(@"upload data point succeeded: %@, status code: %d", blockDataPoint.header.headerID, (int)statusCode);
-            [self.pendingDataPoints removeObject:blockDataPoint];
+            @synchronized(self.pendingDataPoints) {
+                [self.pendingDataPoints removeObject:blockDataPoint];
+            }
             [self saveClientState];
             if (self.uploadDelegate) {
-                [self.uploadDelegate OMHClient:self didUploadDataPoint:blockDataPoint];
+                [self.uploadDelegate OMHClient:self dataPointUploadSucceeded:blockDataPoint];
             }
         }
         else {
             OMHLog(@"upload data point failed: %@, status code: %d", blockDataPoint[@"header"][@"id"], (int)statusCode);
+            if (statusCode == 500) {
+                @synchronized(self.pendingDataPoints) {
+                    [self.pendingDataPoints removeObject:blockDataPoint];
+                }
+                [self saveClientState];
+                if (self.uploadDelegate) {
+                    [self.uploadDelegate OMHClient:self dataPointUploadFailed:blockDataPoint];
+                }
+            }
         }
     }];
 }
@@ -651,6 +677,8 @@ static GPPSignIn *_gppSignIn = nil;
 
 - (void)submitUploadRequest:(NSMutableURLRequest *)request forRichMediaDataPoint:(OMHRichMediaDataPoint *)rmdp
 {
+    [self.uploadDelegate OMHClient:self dataPointUploadBegan:rmdp.dataPoint];
+    
     NSURLSessionUploadTask *task =
     [self.backgroundSessionManager uploadTaskWithRequest:request
                                                 fromFile:rmdp.tempFileURL
@@ -663,14 +691,25 @@ static GPPSignIn *_gppSignIn = nil;
          if (error == nil || statusCode == 409) {
              OMHLog(@"upload rich media data point succeeded: %@, status code: %d", rmdp.dataPoint.header.headerID, (int)statusCode);
              [rmdp removeTempFile];
-             [self.pendingRichMediaDataPoints removeObject:rmdp];
+             @synchronized(self.pendingDataPoints) {
+                 [self.pendingRichMediaDataPoints removeObject:rmdp];
+             }
              [self saveClientState];
              if (self.uploadDelegate) {
-                 [self.uploadDelegate OMHClient:self didUploadDataPoint:rmdp.dataPoint];
+                 [self.uploadDelegate OMHClient:self dataPointUploadSucceeded:rmdp.dataPoint];
              }
          }
          else {
              OMHLog(@"upload rich media data point failed: %@, status code: %d", rmdp.dataPoint.header.headerID, (int)statusCode);
+             if (statusCode == 500) {
+                 @synchronized(self.pendingDataPoints) {
+                     [self.pendingRichMediaDataPoints removeObject:rmdp];
+                 }
+                 [self saveClientState];
+                 if (self.uploadDelegate) {
+                     [self.uploadDelegate OMHClient:self dataPointUploadFailed:rmdp.dataPoint];
+                 }
+             }
          }
 
      }];
